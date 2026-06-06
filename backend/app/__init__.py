@@ -1,0 +1,1 @@
+"""JoinQ backend application package."""

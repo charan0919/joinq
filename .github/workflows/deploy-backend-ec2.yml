@@ -1,0 +1,99 @@
+name: Deploy Backend to EC2
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy Backend
+    runs-on: ubuntu-latest
+    env:
+      BACKEND_IMAGE: joinq-backend:latest
+      BACKEND_CONTAINER_NAME: joinq-backend
+      BACKEND_CONTAINER_PORT: "8000"
+      BACKEND_HOST_PORT: "8094"
+      EC2_USERNAME: ${{ vars.EC2_USERNAME }}
+      EC2_DEPLOY_DIR: joinq
+      EC2_SSH_PORT: ${{ vars.EC2_SSH_PORT }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Backend Docker Image
+        working-directory: ./backend
+        run: |
+          docker build -t "$BACKEND_IMAGE" .
+          docker save "$BACKEND_IMAGE" | gzip > ../backend.tar.gz
+          chmod 644 ../backend.tar.gz
+
+      - name: Copy Files to EC2 via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ vars.EC2_HOST }}
+          username: ${{ env.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ env.EC2_SSH_PORT || 22 }}
+          source: "backend.tar.gz"
+          target: "/home/${{ env.EC2_USERNAME }}/joinq"
+          strip_components: 0
+
+      - name: Deploy on EC2 via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          DB_HOST: ${{ vars.DB_HOST }}
+          DB_PORT: ${{ vars.DB_PORT }}
+          DB_USER: ${{ vars.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ vars.DB_NAME }}
+          DB_SSLMODE: ${{ vars.DB_SSLMODE }}
+          DB_SSLROOTCERT: ${{ vars.DB_SSLROOTCERT }}
+        with:
+          host: ${{ vars.EC2_HOST }}
+          username: ${{ env.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ env.EC2_SSH_PORT || 22 }}
+          envs: DB_HOST,DB_PORT,DB_USER,DB_PASSWORD,DB_NAME,DB_SSLMODE,DB_SSLROOTCERT
+          script_stop: true
+          script: |
+            set -e
+
+            APP_DIR="${{ env.EC2_DEPLOY_DIR }}"
+            CONTAINER_NAME="${{ env.BACKEND_CONTAINER_NAME }}"
+            IMAGE_NAME="${{ env.BACKEND_IMAGE }}"
+            HOST_PORT="${{ env.BACKEND_HOST_PORT }}"
+            CONTAINER_PORT="${{ env.BACKEND_CONTAINER_PORT }}"
+
+            cd "$APP_DIR"
+
+            : "${DB_HOST:?Missing required variable DB_HOST}"
+            : "${DB_PORT:?Missing required variable DB_PORT}"
+            : "${DB_USER:?Missing required variable DB_USER}"
+            : "${DB_PASSWORD:?Missing required secret DB_PASSWORD}"
+
+            cat > .env.backend << EOF
+            DB_HOST=${DB_HOST}
+            DB_PORT=${DB_PORT}
+            DB_USER=${DB_USER}
+            DB_PASSWORD=${DB_PASSWORD}
+            DB_NAME=${DB_NAME:-joinq}
+            DB_SSLMODE=${DB_SSLMODE:-verify-full}
+            DB_SSLROOTCERT=${DB_SSLROOTCERT:-/app/global-bundle.pem}
+            EOF
+
+            gunzip -c backend.tar.gz | sudo docker load
+
+            sudo docker stop "$CONTAINER_NAME" || true
+            sudo docker rm "$CONTAINER_NAME" || true
+
+            sudo docker run -d \
+              --name "$CONTAINER_NAME" \
+              --env-file .env.backend \
+              -p "$HOST_PORT:$CONTAINER_PORT" \
+              --restart unless-stopped \
+              "$IMAGE_NAME"
+
+            rm -f backend.tar.gz || true
+            sudo docker image prune -f
