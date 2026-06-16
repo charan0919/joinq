@@ -3,6 +3,8 @@ from typing import Optional
 from jose import JWTError, jwt
 import bcrypt
 from app.core.config import settings
+from fastapi import Depends, HTTPException
+from fastapi.security import OAuth2PasswordBearer
 
 
 def hash_password(password: str) -> str:
@@ -36,3 +38,20 @@ def decode_access_token(token: str) -> Optional[dict]:
         )
     except JWTError:
         return None
+    
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+
+
+def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
+    payload = decode_access_token(token)
+    if payload is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return {
+        "user_id": payload.get("sub"),
+        "business_id": payload.get("business_id"),
+        "role": payload.get("role"),
+    }
