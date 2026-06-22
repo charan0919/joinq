@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.db import check_database_health
-from app.routers import auth , queues
+from app.routers import auth , queues , customers
 
 app = FastAPI(
     title="JoinQ API",
@@ -31,6 +31,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(queues.router)
+app.include_router(customers.router)
 
 @app.get("/")
 async def root():
