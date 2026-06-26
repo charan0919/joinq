@@ -286,6 +286,23 @@ async def call_next(
         next_token.status = "CALLED"
         next_token.called_at = datetime.now(timezone.utc)
         await db.commit()
+        # Send WhatsApp notification
+        try:
+            from app.models.models import Customer
+            cust_result = await db.execute(
+                select(Customer).where(Customer.id == next_token.customer_id)
+            )
+            customer = cust_result.scalar_one_or_none()
+            if customer:
+                from app.services.notifications import notify_token_called
+                await notify_token_called(
+                    phone=customer.phone,
+                    customer_name=customer.name,
+                    token_number=next_token.token_number,
+                    queue_name=queue.name,
+                )
+        except Exception:
+            pass  # Never let notification failure break the main flow
 
         return APIResponse(
             success=True,
