@@ -159,6 +159,21 @@ async def join_queue(
         )
         db.add(token)
         await db.commit()
+        # Send WhatsApp notification
+        try:
+            from app.services.notifications import notify_queue_joined
+            await notify_queue_joined(
+                phone=customer.phone,
+                customer_name=customer.name,
+                token_number=token_number,
+                queue_name=queue.name,
+                business_name=business.name,
+                position=position,
+                estimated_wait=estimated_wait,
+            )
+        except Exception:
+            import traceback
+            print("NOTIFICATION ERROR:", traceback.format_exc())
 
         return APIResponse(
             success=True,
