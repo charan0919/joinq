@@ -50,12 +50,13 @@ jobs:
           DB_NAME: ${{ vars.DB_NAME }}
           DB_SSLMODE: ${{ vars.DB_SSLMODE }}
           DB_SSLROOTCERT: ${{ vars.DB_SSLROOTCERT }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
         with:
           host: ${{ vars.EC2_HOST }}
           username: ${{ env.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ env.EC2_SSH_PORT || 22 }}
-          envs: DB_HOST,DB_PORT,DB_USER,DB_PASSWORD,DB_NAME,DB_SSLMODE,DB_SSLROOTCERT
+          envs: DB_HOST,DB_PORT,DB_USER,DB_PASSWORD,DB_NAME,DB_SSLMODE,DB_SSLROOTCERT,SECRET_KEY
           script_stop: true
           script: |
             set -e
@@ -72,6 +73,7 @@ jobs:
             : "${DB_PORT:?Missing required variable DB_PORT}"
             : "${DB_USER:?Missing required variable DB_USER}"
             : "${DB_PASSWORD:?Missing required secret DB_PASSWORD}"
+            : "${SECRET_KEY:?Missing required secret SECRET_KEY}"
 
             cat > .env.backend << EOF
             DB_HOST=${DB_HOST}
@@ -81,6 +83,7 @@ jobs:
             DB_NAME=${DB_NAME:-joinq}
             DB_SSLMODE=${DB_SSLMODE:-verify-full}
             DB_SSLROOTCERT=${DB_SSLROOTCERT:-/app/global-bundle.pem}
+            SECRET_KEY=${SECRET_KEY}
             EOF
 
             gunzip -c backend.tar.gz | sudo docker load
