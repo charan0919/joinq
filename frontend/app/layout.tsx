@@ -1,21 +1,23 @@
 import type { Metadata } from "next";
-import { DM_Sans, Space_Grotesk } from "next/font/google";
-
+import { Inter, Sora } from "next/font/google";
 import "./globals.css";
 
-const spaceGrotesk = Space_Grotesk({
+const sora = Sora({
   subsets: ["latin"],
-  variable: "--font-heading",
+  variable: "--font-sora",
+  weight: ["400", "600", "700"],
 });
 
-const dmSans = DM_Sans({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-body",
+  variable: "--font-inter",
+  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
-  title: "JoinQ",
-  description: "Join a queue with a QR code and get notified when it is your turn.",
+  title: "JoinQ — Smart Queue Management",
+  description:
+    "Create digital queues, manage customers in real time, and reduce physical waiting with QR-based access.",
 };
 
 export default function RootLayout({
@@ -24,10 +26,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${spaceGrotesk.variable} ${dmSans.variable}`}>
-        {children}
-      </body>
+    <html lang="en" data-theme="light">
+      <body className={`${sora.variable} ${inter.variable}`}>{children}</body>
     </html>
   );
 }
