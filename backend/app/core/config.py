@@ -20,12 +20,15 @@ class Settings(BaseSettings):
     APP_HOST: str = "0.0.0.0"
     APP_PORT: int = 8000
 
-    @property
-    def DATABASE_URL(self) -> str:
-        return (
-            f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}"
-            f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
-        )
+   @property
+def DATABASE_URL(self) -> str:
+    url = (
+        f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}"
+        f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+    )
+    if self.DB_SSLMODE and self.DB_SSLMODE != "disable":
+        url += f"?ssl={self.DB_SSLMODE}"
+    return url
 
     # These lowercase properties match what db.py expects
     @property
