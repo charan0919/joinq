@@ -387,9 +387,8 @@ export default function QueueDetails() {
                     className="btn-outline"
                     style={{ flex: 1, padding: "10px" }}
                     onClick={() => {
-                      navigator.clipboard.writeText(
-                        `https://joinq.unitedtechlab.com/join/${queueId}`
-                      );
+                      const baseUrl = window.location.origin;
+                      navigator.clipboard.writeText(`${baseUrl}/join/${queueId}`);
                       alert("Link copied!");
                     }}
                   >
