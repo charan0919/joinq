@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import QRCode from "qrcode";
 
 interface Queue {
   queue_id: string;
@@ -36,11 +37,19 @@ export default function QueueDetails() {
   const [actionLoading, setActionLoading] = useState(false);
   const [queuesOpen, setQueuesOpen] = useState(true);
   const [currentServing, setCurrentServing] = useState<Token | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState<string>("");
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
-    if (!token) { router.push("/auth"); return; }
+    if (!token) {
+      router.push("/auth");
+      return;
+    }
     fetchData(token);
+    QRCode.toDataURL(`https://joinq.unitedtechlab.com/join/${queueId}`, {
+      width: 200,
+      margin: 2,
+    }).then((url) => setQrDataUrl(url));
   }, [router, queueId]);
 
   const fetchData = async (authToken: string) => {
@@ -53,12 +62,12 @@ export default function QueueDetails() {
           headers: { Authorization: `Bearer ${authToken}` },
         }),
       ]);
-
-      if (queueRes.status === 401) { router.push("/auth"); return; }
-
+      if (queueRes.status === 401) {
+        router.push("/auth");
+        return;
+      }
       const queueData = await queueRes.json();
       const tokensData = await tokensRes.json();
-
       if (queueData.success) setQueue(queueData.data);
       if (tokensData.success) setTokens(tokensData.data);
     } catch (err) {
@@ -155,14 +164,21 @@ export default function QueueDetails() {
         <nav className="db-nav">
           <Link href="/dashboard" className="db-nav-item">🏠 Dashboard</Link>
           <div>
-            <button className="db-nav-item db-nav-parent db-nav-active" onClick={() => setQueuesOpen(!queuesOpen)}>
+            <button
+              className="db-nav-item db-nav-parent db-nav-active"
+              onClick={() => setQueuesOpen(!queuesOpen)}
+            >
               📋 Queues
               <span className="db-nav-arrow">{queuesOpen ? "▾" : "▸"}</span>
             </button>
             {queuesOpen && (
               <div className="db-nav-sub">
-                <Link href="/dashboard/queues" className="db-nav-subitem db-nav-subitem-active">View queues</Link>
-                <Link href="/dashboard/queues/create" className="db-nav-subitem">Create queue</Link>
+                <Link href="/dashboard/queues" className="db-nav-subitem db-nav-subitem-active">
+                  View queues
+                </Link>
+                <Link href="/dashboard/queues/create" className="db-nav-subitem">
+                  Create queue
+                </Link>
               </div>
             )}
           </div>
@@ -182,19 +198,29 @@ export default function QueueDetails() {
               <span>{queue?.name || "Queue Details"}</span>
             </div>
             <h1 className="db-page-title">{queue?.name || "Queue Details"}</h1>
-            <p className="db-page-subtitle">Manage customers, monitor queue status, and control live operations.</p>
+            <p className="db-page-subtitle">
+              Manage customers, monitor queue status, and control live operations.
+            </p>
           </div>
           <div className="db-topbar-right">
             <span className={`db-badge ${queue?.status === "ACTIVE" ? "db-badge-active" : "db-badge-inactive"}`}>
-              {queue?.status === "ACTIVE" ? "● Active" : "● Inactive"}
+              ● {queue?.status === "ACTIVE" ? "Active" : queue?.status}
             </span>
             {queue?.status === "ACTIVE" && (
-              <button className="btn-outline" onClick={() => updateQueueStatus("PAUSED")} disabled={actionLoading}>
+              <button
+                className="btn-outline"
+                onClick={() => updateQueueStatus("PAUSED")}
+                disabled={actionLoading}
+              >
                 Pause Queue
               </button>
             )}
             {queue?.status === "PAUSED" && (
-              <button className="btn-primary" onClick={() => updateQueueStatus("ACTIVE")} disabled={actionLoading}>
+              <button
+                className="btn-primary"
+                onClick={() => updateQueueStatus("ACTIVE")}
+                disabled={actionLoading}
+              >
                 Resume Queue
               </button>
             )}
@@ -210,7 +236,7 @@ export default function QueueDetails() {
             </div>
             <div className="db-stat-card">
               <div className="db-stat-label">Currently serving</div>
-              <div className="db-stat-value" style={{color: "#2563eb"}}>
+              <div className="db-stat-value" style={{ color: "#2563eb" }}>
                 {currentServing?.token_number || "—"}
               </div>
             </div>
@@ -221,17 +247,17 @@ export default function QueueDetails() {
           </div>
 
           <div className="qd-layout">
-            {/* Left - Waiting Queue Table */}
+            {/* Left */}
             <div>
               {/* Now Serving Panel */}
               <div className="qd-serving-card">
                 <div className="qd-serving-header">
-                  <h2 className="db-card-title" style={{margin: 0}}>Now Serving</h2>
+                  <h2 className="db-card-title" style={{ margin: 0 }}>Now Serving</h2>
                   <button
                     className="btn-primary"
                     onClick={callNext}
                     disabled={actionLoading || queue?.status !== "ACTIVE"}
-                    style={{padding: "10px 20px"}}
+                    style={{ padding: "10px 20px" }}
                   >
                     {actionLoading ? "..." : "Call Next"}
                   </button>
@@ -257,14 +283,16 @@ export default function QueueDetails() {
                     </div>
                   </div>
                 ) : (
-                  <p className="db-empty" style={{padding: "20px 0"}}>No customer being served. Click &quot;Call Next&quot; to start.</p>
+                  <p className="db-empty" style={{ padding: "20px 0" }}>
+                    No customer being served. Click &quot;Call Next&quot; to start.
+                  </p>
                 )}
               </div>
 
               {/* Waiting Queue Table */}
-              <div className="db-card" style={{marginTop: "20px"}}>
+              <div className="db-card" style={{ marginTop: "20px" }}>
                 <h2 className="db-card-title">Waiting Queue</h2>
-                <div className="vq-table-wrapper" style={{border: "none", borderRadius: 0}}>
+                <div className="vq-table-wrapper" style={{ border: "none", borderRadius: 0 }}>
                   <table className="vq-table">
                     <thead>
                       <tr>
@@ -287,7 +315,9 @@ export default function QueueDetails() {
                             <td><strong>{token.token_number}</strong></td>
                             <td>
                               <div>{token.customer_name}</div>
-                              <div style={{fontSize: "12px", color: "#94a3b8"}}>{token.customer_phone}</div>
+                              <div style={{ fontSize: "12px", color: "#94a3b8" }}>
+                                {token.customer_phone}
+                              </div>
                             </td>
                             <td className="vq-date">{formatTime(token.joined_at)}</td>
                             <td>{token.position * (queue?.avg_service_time || 5)} mins</td>
@@ -295,31 +325,25 @@ export default function QueueDetails() {
                               <span className="db-badge db-badge-active">Waiting</span>
                             </td>
                             <td>
-                              <div style={{display: "flex", gap: "8px"}}>
+                              <div style={{ display: "flex", gap: "8px" }}>
                                 <button
                                   className="qd-icon-btn qd-icon-complete"
                                   onClick={() => updateTokenStatus(token.token_id, "SERVED")}
                                   disabled={actionLoading}
                                   title="Complete"
-                                >
-                                  ✓
-                                </button>
+                                >✓</button>
                                 <button
                                   className="qd-icon-btn qd-icon-skip"
                                   onClick={() => updateTokenStatus(token.token_id, "SKIPPED")}
                                   disabled={actionLoading}
                                   title="Skip"
-                                >
-                                  →
-                                </button>
+                                >→</button>
                                 <button
                                   className="qd-icon-btn qd-icon-remove"
                                   onClick={() => updateTokenStatus(token.token_id, "CANCELLED")}
                                   disabled={actionLoading}
                                   title="Remove"
-                                >
-                                  ✕
-                                </button>
+                                >✕</button>
                               </div>
                             </td>
                           </tr>
@@ -331,20 +355,44 @@ export default function QueueDetails() {
               </div>
             </div>
 
-            {/* Right - QR Card + Danger Zone */}
+            {/* Right */}
             <div className="qd-right">
               {/* QR Card */}
               <div className="db-card">
                 <h3 className="db-card-title">Queue QR</h3>
-                <div className="cq-qr-placeholder" style={{padding: "24px 16px"}}>
-                  <div className="cq-qr-box" style={{width: "100px", height: "100px"}} />
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", padding: "16px 0" }}>
+                  {qrDataUrl ? (
+                    <img
+                      src={qrDataUrl}
+                      alt="Queue QR Code"
+                      style={{ width: "160px", height: "160px", borderRadius: "8px" }}
+                    />
+                  ) : (
+                    <div className="cq-qr-box" style={{ width: "160px", height: "160px" }} />
+                  )}
                   <p className="cq-qr-text">Scan to join this queue</p>
                 </div>
-                <div style={{display: "flex", gap: "8px", marginTop: "12px"}}>
-                  <button className="btn-outline" style={{flex: 1, padding: "10px"}}>
-                    Download QR
-                  </button>
-                  <button className="btn-outline" style={{flex: 1, padding: "10px"}}>
+                <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
+                  {qrDataUrl && (
+                    <a
+                      href={qrDataUrl}
+                      download={queue?.name? queue.name+"qr.png" :"queue-qr.png"}
+                      className="btn-outline"
+                      style={{ flex: 1, padding: "10px", textAlign: "center" }}
+                    >
+                      Download QR
+                    </a>
+                  )}
+                  <button
+                    className="btn-outline"
+                    style={{ flex: 1, padding: "10px" }}
+                    onClick={() => {
+                      navigator.clipboard.writeText(
+                        `https://joinq.unitedtechlab.com/join/${queueId}`
+                      );
+                      alert("Link copied!");
+                    }}
+                  >
                     Copy Link
                   </button>
                 </div>
@@ -353,7 +401,7 @@ export default function QueueDetails() {
               {/* Danger Zone */}
               <div className="qd-danger-card">
                 <h3 className="qd-danger-title">Danger Zone</h3>
-                <div style={{display: "flex", flexDirection: "column", gap: "10px"}}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                   <button
                     className="qd-danger-btn qd-pause-btn"
                     onClick={() => updateQueueStatus("PAUSED")}
@@ -368,7 +416,10 @@ export default function QueueDetails() {
                   >
                     Close Queue
                   </button>
-                  <button className="qd-danger-btn qd-delete-btn" disabled={actionLoading}>
+                  <button
+                    className="qd-danger-btn qd-delete-btn"
+                    disabled={actionLoading}
+                  >
                     Delete Queue
                   </button>
                 </div>
