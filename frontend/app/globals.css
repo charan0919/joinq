@@ -2551,3 +2551,24 @@ h4 {
     grid-template-columns: 1fr;
   }
 }
+
+.db-theme-toggle {
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  background: none;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  font-family: var(--font-inter), sans-serif;
+  transition: all 0.15s ease;
+  margin-bottom: 8px;
+  width: 100%;
+  text-align: left;
+}
+
+.db-theme-toggle:hover {
+  border-color: #2563eb;
+  color: #2563eb;
+}
