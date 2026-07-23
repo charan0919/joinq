@@ -200,7 +200,21 @@ export default function Settings() {
                     {profile?.is_active ? "Active" : "Inactive"}
                   </span>
                 </div>
-
+                <div className="st-info-row">
+                  <span className="st-info-label">Queues</span>
+                  <button
+                    className="db-theme-toggle"
+                    style={{width: "auto", padding: "6px 14px", marginBottom: 0}}
+                    onClick={() => {
+                        const current = document.documentElement.getAttribute("data-theme");
+                        const newTheme = current === "dark" ? "light" : "dark";
+                        document.documentElement.setAttribute("data-theme", newTheme);
+                        localStorage.setItem("theme", newTheme);
+                    }}
+                  >
+                    Toggle Theme
+                  </button>
+                </div>
                 <div className="cq-section-title" style={{ marginTop: "24px" }}>Danger Zone</div>
                 <button className="qd-danger-btn qd-delete-btn" style={{ marginTop: "12px" }} onClick={handleLogout}>
                   Sign Out

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Sora } from "next/font/google";
 import "./globals.css";
+import ThemeProvider from "./components/ThemeProvider";
 
 const sora = Sora({
   subsets: ["latin"],
@@ -27,7 +28,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" data-theme="light">
-      <body className={`${sora.variable} ${inter.variable}`}>{children}</body>
+      <body className={`${sora.variable} ${inter.variable}`}>
+        <ThemeProvider />
+        {children}
+      </body>
     </html>
   );
 }
