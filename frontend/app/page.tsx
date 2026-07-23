@@ -39,7 +39,10 @@ export default function Home() {
       <nav className="navbar">
         <div className="container">
           <div className="navbar-left">
-            <span className="logo">JoinQ</span>
+            <div style={{display: "flex", alignItems: "center", gap: "8px"}}>
+              <img src="/logo.png" alt="JoinQ" height={32} style={{borderRadius: "6px"}} />
+              <span className="logo">JoinQ</span>
+            </div>
           </div>
           <div className="navbar-center">
             <a href="#how-it-works" className="nav-link">How it works</a>
