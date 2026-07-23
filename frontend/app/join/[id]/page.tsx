@@ -329,6 +329,12 @@ export default function JoinQueue() {
                 <button className="join-btn-danger" onClick={handleLeave}>
                   Leave Queue
                 </button>
+                <button
+                  className="join-btn-outline"
+                  onClick={() => setStep("token")}
+                >
+                  ← Back to Token
+                </button>
               </>
             )}
           </div>
