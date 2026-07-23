@@ -2503,3 +2503,51 @@ h4 {
   padding: 60px 20px;
   color: #64748b;
 }
+
+/* ── Settings ────────────────────────────────────────────── */
+.st-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  align-items: start;
+}
+
+.st-success {
+  background: #dcfce7;
+  border: 1px solid #bbf7d0;
+  color: #16a34a;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.st-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.st-info-row:last-of-type {
+  border-bottom: none;
+}
+
+.st-info-label {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.st-info-value {
+  font-size: 14px;
+  color: #0f172a;
+  font-weight: 500;
+  font-family: monospace;
+}
+
+@media (max-width: 768px) {
+  .st-layout {
+    grid-template-columns: 1fr;
+  }
+}
