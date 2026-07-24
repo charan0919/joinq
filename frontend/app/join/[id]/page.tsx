@@ -54,7 +54,21 @@ export default function JoinQueue() {
 
   // Fetch queue info on load
   useEffect(() => {
-    fetchQueueInfo();
+    // Check saved token FIRST before fetching queue info
+    const saved = localStorage.getItem(`token_${queueId}`);
+    if (saved) {
+      try {
+        const savedToken = JSON.parse(saved);
+        setTokenInfo(savedToken);
+        setStep("token");
+        setLoading(false);
+      } catch {
+        localStorage.removeItem(`token_${queueId}`);
+        fetchQueueInfo();
+      }
+    } else {
+      fetchQueueInfo();
+    }
   }, [queueId]);
 
   // Poll token status every 10 seconds when on status step

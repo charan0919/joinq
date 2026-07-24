@@ -88,6 +88,22 @@ export default function QueueDetails() {
       const data = await res.json();
       if (data.success) {
         setCurrentServing(data.data);
+        try {
+          const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+          const oscillator = audioCtx.createOscillator();
+          const gainNode = audioCtx.createGain();
+          oscillator.connect(gainNode);
+          gainNode.connect(audioCtx.destination);
+          oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+          oscillator.frequency.setValueAtTime(600, audioCtx.currentTime + 0.1);
+          oscillator.frequency.setValueAtTime(800, audioCtx.currentTime + 0.2);
+          gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+          oscillator.start(audioCtx.currentTime);
+          oscillator.stop(audioCtx.currentTime + 0.5);
+        } catch {
+          // Sound not supported
+        }
         fetchData(token!);
       }
     } catch (err) {
@@ -418,6 +434,25 @@ export default function QueueDetails() {
                   <button
                     className="qd-danger-btn qd-delete-btn"
                     disabled={actionLoading}
+                    onClick={async () => {
+                      if (!confirm("Are you sure you want to delete this queue? This cannot be undone.")) return;
+                      setActionLoading(true);
+                      try {
+                        const token = localStorage.getItem("access_token");
+                        const res = await fetch(`${API_BASE}/queues/${queueId}`, {
+                          method: "DELETE",
+                          headers: { Authorization: `Bearer ${token}` },
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                          router.push("/dashboard/queues");
+                        }
+                      } catch (err) {
+                        console.error(err);
+                      } finally {
+                        setActionLoading(false);
+                      }
+                    }}
                   >
                     Delete Queue
                   </button>
