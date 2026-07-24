@@ -374,3 +374,44 @@ async def update_token_status(
     except Exception as e:
         print("UPDATE TOKEN ERROR:", traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
+    
+# ── 8. Delete Queue ──────────────────────────────────────────────
+@router.delete("/{queue_id}")
+async def delete_queue(
+    queue_id: str,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        result = await db.execute(
+            select(Queue).where(
+                Queue.id == uuid.UUID(queue_id),
+                Queue.business_id == uuid.UUID(current_user["business_id"]),
+            )
+        )
+        queue = result.scalar_one_or_none()
+        if not queue:
+            raise HTTPException(status_code=404, detail="Queue not found")
+
+        # Delete associated tokens first (foreign key constraint)
+        tokens_result = await db.execute(
+            select(Token).where(Token.queue_id == uuid.UUID(queue_id))
+        )
+        tokens = tokens_result.scalars().all()
+        for token in tokens:
+            await db.delete(token)
+
+        await db.flush()
+        await db.delete(queue)
+        await db.commit()
+
+        return APIResponse(
+            success=True,
+            data={"queue_id": queue_id},
+            message="Queue deleted successfully",
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        print("DELETE QUEUE ERROR:", traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
