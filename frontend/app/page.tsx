@@ -14,22 +14,6 @@ const qrPixels = [
 ];
 
 export default function Home() {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
-
-  useEffect(() => {
-    const saved = localStorage.getItem("theme") as "light" | "dark" | null;
-    if (saved) {
-      setTheme(saved);
-      document.documentElement.setAttribute("data-theme", saved);
-    }
-  }, []);
-
-  const toggleTheme = () => {
-    const next = theme === "light" ? "dark" : "light";
-    setTheme(next);
-    document.documentElement.setAttribute("data-theme", next);
-    localStorage.setItem("theme", next);
-  };
 
   const maxBar = Math.max(...chartData);
 
@@ -50,9 +34,6 @@ export default function Home() {
             <a href="#contact" className="nav-link">Contact</a>
           </div>
           <div className="navbar-right">
-            <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
-              {theme === "light" ? "🌙" : "☀️"}
-            </button>
             <a href="/auth" className="btn-primary">Get Started</a>
           </div>
         </div>
